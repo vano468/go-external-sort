@@ -32,6 +32,18 @@ By default the tool outputs with [tsv](https://en.wikipedia.org/wiki/Tab-separat
 ##### Limitations
 At the current implementation, the tool keeps file descriptors opened for all temporary files per iteration. So if you have a too-large file and too-small buffer size, you may face with max open files limit per process or per login session (each OS has different limits). Feel free to provide a PR with changes to keep descriptors opened only for the current chunk 😊 (see [file_wrapper.go](https://github.com/vano468/go-external-sort/blob/main/sorter/file_wrapper.go)). Also as a workaround you may temporary [increase](https://www.tecmint.com/increase-set-open-file-limits-in-linux/) the limits.
 
+### Testing
+The repo contains two integration tests.
+1. The integration test processing a small set of predefined data:
+```
+go test github.com/vano468/go-external-sort/sorter -v -run TestMergeSorterIntegration
+```
+
+2. The integration test generates and processes a large file containing 10M random numbers from 0 to 9. The test duration is about 60 seconds (m1 macbook) and it can be used to observe how the tool creates and manages chunks in the file system. Additionally, the test retains the output file, allowing for manual inspection of the final results, rather than relying on test checks:
+```
+go test github.com/vano468/go-external-sort/sorter -v -run TestMergeSorterLargeFile
+```
+
 ### Algorithm
 Underhood, the tool uses external merge sort algorithm:
 1. Read the input file in chunks of size N, sort each chunk using a standard sorting algorithm and write to temporary file.
